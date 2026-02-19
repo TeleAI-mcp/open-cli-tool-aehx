@@ -1,0 +1,35 @@
+name: Label Comment Automation
+
+on:
+  issues:
+    types:
+      - labeled
+
+jobs:
+  auto-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post comment based on label
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const label = context.payload.label.name;
+            
+            // Define label-to-comment mappings
+            const commentMessages = {
+              'wontfix': 'After review, we have decided not to address this issue at this time.',
+              'documentation': 'Thank you for flagging this documentation issue. We will update it soon.',
+              'completed': 'This issue has been resolved. Thank you for your contribution!'
+            };
+            
+            // Check if the label has a corresponding message
+            if (commentMessages[label]) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: commentMessages[label]
+              });
+            }
